@@ -1,0 +1,988 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="CloudScan RPAS Enablement, BVLOS readiness, SORA risk assessments, CASA instrument support, plus UAV LiDAR &amp; photogrammetry deliverables." />
+  <title>CloudScan | RPAS Enablement • BVLOS • SORA • Spatial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300&family=Barlow+Condensed:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink:#e8edf5; --ink-dim:#8fa3be; --ink-muted:#566880;
+      --bg:#060d18; --bg2:#091423; --bg3:#0d1e30;
+      --surface:rgba(13,26,46,.75); --surface2:rgba(8,18,32,.85);
+      --line:rgba(79,180,220,.12); --line2:rgba(79,180,220,.06);
+      --c1:#3ecfcf; --c2:#5ba3f5; --c3:#1d7cd4;
+      --grad:linear-gradient(135deg,var(--c1),var(--c2));
+      --radius:16px; --maxw:1140px;
+      --font:'Barlow',sans-serif; --mono:'IBM Plex Mono',monospace; --display:'Barlow Condensed',sans-serif;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1.6;overflow-x:hidden}
+
+    #bgCanvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.55}
+    .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px;position:relative;z-index:1}
+    a{color:var(--c1);text-decoration:none}
+    a:hover{color:var(--c2)}
+
+    /* NAV */
+    .topbar{position:sticky;top:0;z-index:200;background:rgba(6,13,24,.88);backdrop-filter:blur(18px) saturate(1.4);border-bottom:1px solid var(--line);transition:background .3s}
+    .topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;height:68px}
+    .brand{display:flex;align-items:center;gap:14px;text-decoration:none}
+    .brand-icon{width:38px;height:38px;flex-shrink:0}
+    .brand-icon svg{width:100%;height:100%}
+    .brand-text{display:flex;flex-direction:column;line-height:1}
+    .brand-name{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:.06em;color:#fff}
+    .brand-sub{font-family:var(--display);font-weight:400;font-size:11px;letter-spacing:.18em;color:var(--c1);text-transform:uppercase;margin-top:1px}
+    .nav{display:flex;align-items:center;gap:4px}
+    .nav a{color:var(--ink-dim);font-size:13.5px;font-weight:500;padding:8px 13px;border-radius:8px;border:1px solid transparent;transition:all .2s;letter-spacing:.02em}
+    .nav a:hover{color:#fff;background:rgba(94,178,255,.08);border-color:var(--line)}
+    .cta-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;font-size:13.5px;font-weight:600;letter-spacing:.04em;color:var(--bg);background:var(--grad);border:none;cursor:pointer;text-decoration:none;box-shadow:0 0 24px rgba(62,207,207,.25);transition:all .2s}
+    .cta-btn:hover{filter:brightness(1.08);box-shadow:0 0 32px rgba(62,207,207,.38);color:var(--bg)}
+
+    /* HERO */
+    .hero{padding:80px 0 60px}
+    .hero-layout{display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start}
+    .kicker{display:inline-flex;align-items:center;gap:10px;padding:7px 14px 7px 10px;border-radius:99px;border:1px solid rgba(62,207,207,.25);background:rgba(62,207,207,.06);font-size:12.5px;font-weight:500;letter-spacing:.05em;color:var(--c1);margin-bottom:22px;font-family:var(--mono)}
+    .kicker-dot{width:8px;height:8px;border-radius:50%;background:var(--c1);box-shadow:0 0 10px var(--c1);animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{box-shadow:0 0 6px var(--c1)}50%{box-shadow:0 0 16px var(--c1),0 0 30px rgba(62,207,207,.3)}}
+    @keyframes lidarPulse{0%,100%{opacity:.35}50%{opacity:1}}
+    .hero-headline{font-family:var(--display);font-weight:800;font-size:clamp(52px,7vw,84px);line-height:.95;letter-spacing:-.01em;color:#fff;margin-bottom:20px}
+    .hero-headline .accent{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .hero-lead{font-size:17px;font-weight:300;color:var(--ink-dim);max-width:52ch;line-height:1.65;margin-bottom:32px}
+    .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:36px}
+    .btn-outline{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;font-size:13.5px;font-weight:600;letter-spacing:.04em;color:var(--ink-dim);border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);text-decoration:none;transition:all .2s}
+    .btn-outline:hover{color:#fff;border-color:var(--line);background:rgba(255,255,255,.07)}
+    .hero-pills{display:flex;flex-wrap:wrap;gap:8px}
+    .tag{font-family:var(--mono);font-size:11.5px;font-weight:500;padding:5px 11px;border-radius:6px;background:rgba(62,207,207,.07);border:1px solid rgba(62,207,207,.18);color:var(--c1);letter-spacing:.03em}
+
+    /* STATS */
+    .stats-panel{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px;backdrop-filter:blur(12px);position:relative;overflow:hidden}
+    .stats-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--c1),var(--c2),transparent);opacity:.5}
+    .stat-item{padding:18px 0;border-bottom:1px solid var(--line2)}
+    .stat-item:last-child{border-bottom:none;padding-bottom:0}
+    .stat-item:first-child{padding-top:0}
+    .stat-num{font-family:var(--display);font-size:30px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1;margin-bottom:4px}
+    .stat-num span{color:var(--c1)}
+    .stat-label{font-size:13px;color:var(--ink-dim);line-height:1.45}
+
+    /* DIVIDER */
+    .section-divider{height:1px;background:linear-gradient(90deg,transparent,var(--line),transparent);margin:8px 0}
+
+    /* SECTIONS */
+    section{padding:60px 0}
+    .section-label{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--c1);letter-spacing:.15em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+    .section-label::before{content:'';width:28px;height:1px;background:var(--c1)}
+    .section-title{font-family:var(--display);font-size:clamp(28px,4vw,42px);font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1.05;margin-bottom:10px}
+    .section-sub{font-size:15px;color:var(--ink-muted);max-width:60ch;margin-bottom:40px}
+
+    /* CARDS */
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+    .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:24px;backdrop-filter:blur(10px);transition:border-color .25s,transform .25s;position:relative;overflow:hidden}
+    .card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--grad);opacity:0;transition:opacity .25s}
+    .card:hover{border-color:rgba(62,207,207,.3);transform:translateY(-2px)}
+    .card:hover::after{opacity:1}
+    .card-full{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:28px;backdrop-filter:blur(10px)}
+    .card-icon{width:52px;height:52px;border-radius:14px;background:rgba(62,207,207,.07);border:1px solid rgba(62,207,207,.18);display:flex;align-items:center;justify-content:center;margin-bottom:18px;transition:background .25s,border-color .25s,transform .25s,box-shadow .25s;color:var(--c1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.02)}
+    .card:hover .card-icon{background:rgba(62,207,207,.13);border-color:rgba(62,207,207,.35);transform:translateY(-1px);box-shadow:0 10px 22px rgba(6,13,24,.28), inset 0 0 0 1px rgba(255,255,255,.03)}
+    .card-icon svg{width:28px;height:28px;display:block}
+    .card-icon .swath-ray{animation:lidarPulse 2.4s ease-in-out infinite}
+    .card-icon .swath-ray:nth-of-type(1){animation-delay:0s}
+    .card-icon .swath-ray:nth-of-type(2){animation-delay:.08s}
+    .card-icon .swath-ray:nth-of-type(3){animation-delay:.16s}
+    .card-icon .swath-ray:nth-of-type(4){animation-delay:.24s}
+    .card-icon .swath-ray:nth-of-type(5){animation-delay:.32s}
+    .card h3{font-family:var(--display);font-size:18px;font-weight:700;color:#fff;letter-spacing:.01em;margin-bottom:10px}
+    .card p{font-size:14px;color:var(--ink-dim);line-height:1.6}
+    .card .card-intro{font-size:14px;color:var(--ink-muted);line-height:1.65;margin-bottom:12px;max-width:36ch}
+    .card ul{list-style:none;padding:0;display:flex;flex-direction:column;gap:8px;margin-top:10px}
+    .card ul li{font-size:13.5px;color:var(--ink-dim);padding-left:18px;position:relative;line-height:1.5}
+    .card ul li::before{content:'→';position:absolute;left:0;color:var(--c1);font-size:12px}
+    .card ul li strong{color:var(--ink);font-weight:600}
+    .pill-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+    .pill{font-size:12px;font-weight:500;padding:5px 12px;border-radius:6px;background:rgba(91,163,245,.08);border:1px solid rgba(91,163,245,.2);color:var(--c2);font-family:var(--mono);letter-spacing:.02em}
+    .reg-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .exp-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px}
+
+    /* CONTACT */
+    .contact-grid{display:grid;grid-template-columns:1fr 340px;gap:20px}
+    label{display:block;margin:14px 0 6px;font-size:12.5px;font-weight:500;color:var(--ink-muted);letter-spacing:.06em;text-transform:uppercase;font-family:var(--mono)}
+    input,textarea{width:100%;padding:13px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:var(--ink);font:inherit;font-size:14px;outline:none;transition:border-color .2s}
+    input:focus,textarea:focus{border-color:rgba(62,207,207,.4)}
+    input::placeholder,textarea::placeholder{color:var(--ink-muted)}
+    textarea{resize:vertical}
+    .contact-info-item{display:flex;align-items:flex-start;gap:12px;padding:16px 0;border-bottom:1px solid var(--line2)}
+    .contact-info-item:last-child{border-bottom:none}
+    .contact-info-icon{width:38px;height:38px;flex-shrink:0;border-radius:10px;background:rgba(62,207,207,.08);border:1px solid rgba(62,207,207,.15);display:flex;align-items:center;justify-content:center;font-size:16px}
+    .contact-info-label{font-size:11.5px;color:var(--ink-muted);margin-bottom:3px;font-family:var(--mono)}
+    .contact-info-val{font-size:14px;color:var(--ink);font-weight:500}
+    .note-text{font-size:12px;color:var(--ink-muted);margin-top:12px;font-style:italic}
+
+    /* FOOTER */
+    footer{position:relative;z-index:1;border-top:1px solid var(--line);padding:32px 0;color:var(--ink-muted);font-size:13px}
+    .footer-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+    /* RESPONSIVE */
+    @media(max-width:960px){
+      .hero-layout{grid-template-columns:1fr}
+      .stats-panel{display:grid;grid-template-columns:repeat(3,1fr);gap:0}
+      .stat-item{border-bottom:none;border-right:1px solid var(--line2);padding:16px}
+      .stat-item:last-child{border-right:none}
+      .grid-3,.grid-2,.reg-grid,.contact-grid{grid-template-columns:1fr}
+      .nav{display:none}
+    }
+    @media(max-width:600px){
+      .stats-panel{grid-template-columns:1fr}
+      .stat-item{border-right:none;border-bottom:1px solid var(--line2)}
+      .hero-headline{font-size:48px}
+    }
+
+    /* ANIMATIONS — visible by default, JS enhances */
+    .fade-up{opacity:1;transform:translateY(0)}
+    .fade-up.animate{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
+    .fade-up.animate.visible{opacity:1;transform:translateY(0)}
+
+    ::-webkit-scrollbar{width:6px}
+    ::-webkit-scrollbar-track{background:var(--bg)}
+    ::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
+  </style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+
+<!-- NAV -->
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="#top" aria-label="CloudScan home">
+      <div class="brand-icon">
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#3ecfcf"/><stop offset="100%" stop-color="#5ba3f5"/></linearGradient></defs>
+    <line x1="60.71" y1="38.55" x2="42.14" y2="54.37" stroke="url(#sg)" stroke-width="1.0" opacity="0.183"/>
+    <line x1="62.88" y1="60.13" x2="42.14" y2="54.37" stroke="url(#sg)" stroke-width="1.0" opacity="0.184"/>
+    <line x1="62.88" y1="60.13" x2="60.71" y2="38.55" stroke="url(#sg)" stroke-width="1.0" opacity="0.188"/>
+    <line x1="37.60" y1="30.91" x2="42.14" y2="54.37" stroke="url(#sg)" stroke-width="1.0" opacity="0.191"/>
+    <line x1="37.60" y1="30.91" x2="60.71" y2="38.55" stroke="url(#sg)" stroke-width="1.0" opacity="0.197"/>
+    <line x1="42.14" y1="54.37" x2="49.54" y2="76.34" stroke="url(#sg)" stroke-width="1.0" opacity="0.198"/>
+    <line x1="23.41" y1="47.31" x2="42.14" y2="54.37" stroke="url(#sg)" stroke-width="1.0" opacity="0.199"/>
+    <line x1="62.88" y1="60.13" x2="49.54" y2="76.34" stroke="url(#sg)" stroke-width="1.0" opacity="0.205"/>
+    <line x1="26.13" y1="68.86" x2="42.14" y2="54.37" stroke="url(#sg)" stroke-width="1.0" opacity="0.21"/>
+    <line x1="60.71" y1="38.55" x2="80.12" y2="50.45" stroke="url(#sg)" stroke-width="1.0" opacity="0.215"/>
+    <line x1="62.88" y1="60.13" x2="80.12" y2="50.45" stroke="url(#sg)" stroke-width="1.0" opacity="0.216"/>
+    <line x1="55.43" y1="19.89" x2="60.71" y2="38.55" stroke="url(#sg)" stroke-width="1.0" opacity="0.217"/>
+    <line x1="23.41" y1="47.31" x2="37.60" y2="30.91" stroke="url(#sg)" stroke-width="1.0" opacity="0.217"/>
+    <line x1="62.88" y1="60.13" x2="73.26" y2="74.16" stroke="url(#sg)" stroke-width="1.0" opacity="0.23"/>
+    <line x1="55.43" y1="19.89" x2="37.60" y2="30.91" stroke="url(#sg)" stroke-width="1.0" opacity="0.23"/>
+    <line x1="60.71" y1="38.55" x2="75.87" y2="26.49" stroke="url(#sg)" stroke-width="1.0" opacity="0.236"/>
+    <line x1="26.13" y1="68.86" x2="49.54" y2="76.34" stroke="url(#sg)" stroke-width="1.0" opacity="0.239"/>
+    <line x1="23.41" y1="47.31" x2="26.13" y2="68.86" stroke="url(#sg)" stroke-width="1.0" opacity="0.24"/>
+    <line x1="49.54" y1="76.34" x2="73.26" y2="74.16" stroke="url(#sg)" stroke-width="1.0" opacity="0.252"/>
+    <line x1="37.60" y1="30.91" x2="18.37" y2="30.14" stroke="url(#sg)" stroke-width="1.0" opacity="0.265"/>
+    <line x1="73.26" y1="74.16" x2="80.12" y2="50.45" stroke="url(#sg)" stroke-width="1.0" opacity="0.266"/>
+    <line x1="75.87" y1="26.49" x2="80.12" y2="50.45" stroke="url(#sg)" stroke-width="1.0" opacity="0.274"/>
+    <line x1="37.53" y1="13.66" x2="37.60" y2="30.91" stroke="url(#sg)" stroke-width="1.0" opacity="0.274"/>
+    <line x1="55.43" y1="19.89" x2="75.87" y2="26.49" stroke="url(#sg)" stroke-width="1.0" opacity="0.276"/>
+    <line x1="23.41" y1="47.31" x2="18.37" y2="30.14" stroke="url(#sg)" stroke-width="1.0" opacity="0.277"/>
+    <line x1="35.89" y1="85.41" x2="49.54" y2="76.34" stroke="url(#sg)" stroke-width="1.0" opacity="0.282"/>
+    <line x1="23.41" y1="47.31" x2="11.01" y2="54.10" stroke="url(#sg)" stroke-width="1.0" opacity="0.293"/>
+    <line x1="35.89" y1="85.41" x2="26.13" y2="68.86" stroke="url(#sg)" stroke-width="1.0" opacity="0.298"/>
+    <line x1="55.43" y1="19.89" x2="37.53" y2="13.66" stroke="url(#sg)" stroke-width="1.0" opacity="0.301"/>
+    <line x1="57.47" y1="89.40" x2="49.54" y2="76.34" stroke="url(#sg)" stroke-width="1.0" opacity="0.303"/>
+    <line x1="11.01" y1="54.10" x2="26.13" y2="68.86" stroke="url(#sg)" stroke-width="1.0" opacity="0.308"/>
+    <line x1="89.22" y1="40.21" x2="80.12" y2="50.45" stroke="url(#sg)" stroke-width="1.0" opacity="0.322"/>
+    <line x1="80.12" y1="50.45" x2="89.06" y2="62.75" stroke="url(#sg)" stroke-width="1.0" opacity="0.333"/>
+    <line x1="55.43" y1="19.89" x2="61.69" y2="10.68" stroke="url(#sg)" stroke-width="1.0" opacity="0.334"/>
+    <line x1="57.47" y1="89.40" x2="73.26" y2="74.16" stroke="url(#sg)" stroke-width="1.0" opacity="0.336"/>
+    <line x1="37.53" y1="13.66" x2="18.37" y2="30.14" stroke="url(#sg)" stroke-width="1.0" opacity="0.343"/>
+    <line x1="26.13" y1="68.86" x2="18.32" y2="76.98" stroke="url(#sg)" stroke-width="1.0" opacity="0.347"/>
+    <line x1="89.22" y1="40.21" x2="75.87" y2="26.49" stroke="url(#sg)" stroke-width="1.0" opacity="0.349"/>
+    <line x1="73.26" y1="74.16" x2="89.06" y2="62.75" stroke="url(#sg)" stroke-width="1.0" opacity="0.352"/>
+    <line x1="18.37" y1="30.14" x2="11.01" y2="54.10" stroke="url(#sg)" stroke-width="1.0" opacity="0.352"/>
+    <line x1="61.69" y1="10.68" x2="75.87" y2="26.49" stroke="url(#sg)" stroke-width="1.0" opacity="0.359"/>
+    <line x1="35.89" y1="85.41" x2="57.47" y2="89.40" stroke="url(#sg)" stroke-width="1.0" opacity="0.37"/>
+    <line x1="77.26" y1="81.74" x2="73.26" y2="74.16" stroke="url(#sg)" stroke-width="1.0" opacity="0.372"/>
+    <line x1="61.69" y1="10.68" x2="37.53" y2="13.66" stroke="url(#sg)" stroke-width="1.0" opacity="0.389"/>
+    <line x1="35.89" y1="85.41" x2="18.32" y2="76.98" stroke="url(#sg)" stroke-width="1.0" opacity="0.4"/>
+    <line x1="82.02" y1="22.73" x2="75.87" y2="26.49" stroke="url(#sg)" stroke-width="1.0" opacity="0.407"/>
+    <line x1="11.01" y1="54.10" x2="18.32" y2="76.98" stroke="url(#sg)" stroke-width="1.0" opacity="0.412"/>
+    <line x1="89.22" y1="40.21" x2="89.06" y2="62.75" stroke="url(#sg)" stroke-width="1.0" opacity="0.416"/>
+    <line x1="22.59" y1="18.08" x2="18.37" y2="30.14" stroke="url(#sg)" stroke-width="1.0" opacity="0.419"/>
+    <line x1="22.59" y1="18.08" x2="37.53" y2="13.66" stroke="url(#sg)" stroke-width="1.0" opacity="0.43"/>
+    <line x1="77.26" y1="81.74" x2="57.47" y2="89.40" stroke="url(#sg)" stroke-width="1.0" opacity="0.433"/>
+    <line x1="10.20" y1="37.00" x2="18.37" y2="30.14" stroke="url(#sg)" stroke-width="1.0" opacity="0.441"/>
+    <line x1="35.89" y1="85.41" x2="38.08" y2="90.10" stroke="url(#sg)" stroke-width="1.0" opacity="0.45"/>
+    <line x1="77.26" y1="81.74" x2="89.06" y2="62.75" stroke="url(#sg)" stroke-width="1.0" opacity="0.451"/>
+    <line x1="10.20" y1="37.00" x2="11.01" y2="54.10" stroke="url(#sg)" stroke-width="1.0" opacity="0.461"/>
+    <line x1="89.22" y1="40.21" x2="82.02" y2="22.73" stroke="url(#sg)" stroke-width="1.0" opacity="0.466"/>
+    <line x1="42.31" y1="9.41" x2="37.53" y2="13.66" stroke="url(#sg)" stroke-width="1.0" opacity="0.47"/>
+    <line x1="9.73" y1="60.06" x2="11.01" y2="54.10" stroke="url(#sg)" stroke-width="1.0" opacity="0.474"/>
+    <line x1="38.08" y1="90.10" x2="57.47" y2="89.40" stroke="url(#sg)" stroke-width="1.0" opacity="0.476"/>
+    <line x1="61.69" y1="10.68" x2="82.02" y2="22.73" stroke="url(#sg)" stroke-width="1.0" opacity="0.477"/>
+    <line x1="18.32" y1="76.98" x2="38.08" y2="90.10" stroke="url(#sg)" stroke-width="1.0" opacity="0.509"/>
+    <line x1="42.31" y1="9.41" x2="61.69" y2="10.68" stroke="url(#sg)" stroke-width="1.0" opacity="0.51"/>
+    <line x1="89.22" y1="40.21" x2="90.46" y2="45.75" stroke="url(#sg)" stroke-width="1.0" opacity="0.511"/>
+    <line x1="63.02" y1="87.92" x2="57.47" y2="89.40" stroke="url(#sg)" stroke-width="1.0" opacity="0.516"/>
+    <line x1="9.73" y1="60.06" x2="18.32" y2="76.98" stroke="url(#sg)" stroke-width="1.0" opacity="0.52"/>
+    <line x1="89.06" y1="62.75" x2="90.46" y2="45.75" stroke="url(#sg)" stroke-width="1.0" opacity="0.525"/>
+    <line x1="22.59" y1="18.08" x2="10.20" y2="37.00" stroke="url(#sg)" stroke-width="1.0" opacity="0.536"/>
+    <line x1="64.76" y1="12.97" x2="61.69" y2="10.68" stroke="url(#sg)" stroke-width="1.0" opacity="0.537"/>
+    <line x1="83.23" y1="70.87" x2="89.06" y2="62.75" stroke="url(#sg)" stroke-width="1.0" opacity="0.547"/>
+    <line x1="22.59" y1="18.08" x2="42.31" y2="9.41" stroke="url(#sg)" stroke-width="1.0" opacity="0.555"/>
+    <line x1="77.26" y1="81.74" x2="63.02" y2="87.92" stroke="url(#sg)" stroke-width="1.0" opacity="0.559"/>
+    <line x1="77.26" y1="81.74" x2="83.23" y2="70.87" stroke="url(#sg)" stroke-width="1.0" opacity="0.571"/>
+    <line x1="9.73" y1="60.06" x2="10.20" y2="37.00" stroke="url(#sg)" stroke-width="1.0" opacity="0.574"/>
+    <line x1="82.02" y1="22.73" x2="90.46" y2="45.75" stroke="url(#sg)" stroke-width="1.6" opacity="0.578"/>
+    <line x1="22.49" y1="75.00" x2="18.32" y2="76.98" stroke="url(#sg)" stroke-width="1.6" opacity="0.584"/>
+    <line x1="64.76" y1="12.97" x2="82.02" y2="22.73" stroke="url(#sg)" stroke-width="1.6" opacity="0.592"/>
+    <line x1="63.02" y1="87.92" x2="38.08" y2="90.10" stroke="url(#sg)" stroke-width="1.6" opacity="0.605"/>
+    <line x1="22.59" y1="18.08" x2="25.11" y2="24.15" stroke="url(#sg)" stroke-width="1.6" opacity="0.626"/>
+    <line x1="64.76" y1="12.97" x2="42.31" y2="9.41" stroke="url(#sg)" stroke-width="1.6" opacity="0.627"/>
+    <line x1="22.49" y1="75.00" x2="38.08" y2="90.10" stroke="url(#sg)" stroke-width="1.6" opacity="0.641"/>
+    <line x1="83.23" y1="70.87" x2="90.46" y2="45.75" stroke="url(#sg)" stroke-width="1.6" opacity="0.651"/>
+    <line x1="10.20" y1="37.00" x2="25.11" y2="24.15" stroke="url(#sg)" stroke-width="1.6" opacity="0.651"/>
+    <line x1="9.73" y1="60.06" x2="22.49" y2="75.00" stroke="url(#sg)" stroke-width="1.6" opacity="0.654"/>
+    <line x1="75.83" y1="29.60" x2="82.02" y2="22.73" stroke="url(#sg)" stroke-width="1.6" opacity="0.657"/>
+    <line x1="83.23" y1="70.87" x2="63.02" y2="87.92" stroke="url(#sg)" stroke-width="1.6" opacity="0.661"/>
+    <line x1="25.11" y1="24.15" x2="42.31" y2="9.41" stroke="url(#sg)" stroke-width="1.6" opacity="0.671"/>
+    <line x1="44.13" y1="82.56" x2="38.08" y2="90.10" stroke="url(#sg)" stroke-width="1.6" opacity="0.673"/>
+    <line x1="10.20" y1="37.00" x2="17.38" y2="49.52" stroke="url(#sg)" stroke-width="1.6" opacity="0.674"/>
+    <line x1="9.73" y1="60.06" x2="17.38" y2="49.52" stroke="url(#sg)" stroke-width="1.6" opacity="0.689"/>
+    <line x1="75.83" y1="29.60" x2="90.46" y2="45.75" stroke="url(#sg)" stroke-width="1.6" opacity="0.708"/>
+    <line x1="50.50" y1="21.17" x2="42.31" y2="9.41" stroke="url(#sg)" stroke-width="1.6" opacity="0.716"/>
+    <line x1="44.13" y1="82.56" x2="63.02" y2="87.92" stroke="url(#sg)" stroke-width="1.6" opacity="0.718"/>
+    <line x1="64.76" y1="12.97" x2="75.83" y2="29.60" stroke="url(#sg)" stroke-width="1.6" opacity="0.723"/>
+    <line x1="79.08" y1="52.95" x2="90.46" y2="45.75" stroke="url(#sg)" stroke-width="1.6" opacity="0.729"/>
+    <line x1="64.76" y1="12.97" x2="50.50" y2="21.17" stroke="url(#sg)" stroke-width="1.6" opacity="0.746"/>
+    <line x1="79.08" y1="52.95" x2="83.23" y2="70.87" stroke="url(#sg)" stroke-width="1.6" opacity="0.753"/>
+    <line x1="44.13" y1="82.56" x2="22.49" y2="75.00" stroke="url(#sg)" stroke-width="1.6" opacity="0.755"/>
+    <line x1="63.68" y1="71.07" x2="63.02" y2="87.92" stroke="url(#sg)" stroke-width="1.6" opacity="0.758"/>
+    <line x1="17.38" y1="49.52" x2="22.49" y2="75.00" stroke="url(#sg)" stroke-width="1.6" opacity="0.758"/>
+    <line x1="17.38" y1="49.52" x2="25.11" y2="24.15" stroke="url(#sg)" stroke-width="1.6" opacity="0.77"/>
+    <line x1="83.23" y1="70.87" x2="63.68" y2="71.07" stroke="url(#sg)" stroke-width="1.6" opacity="0.772"/>
+    <line x1="25.11" y1="24.15" x2="50.50" y2="21.17" stroke="url(#sg)" stroke-width="1.6" opacity="0.792"/>
+    <line x1="79.08" y1="52.95" x2="75.83" y2="29.60" stroke="url(#sg)" stroke-width="1.6" opacity="0.813"/>
+    <line x1="50.50" y1="21.17" x2="75.83" y2="29.60" stroke="url(#sg)" stroke-width="1.6" opacity="0.815"/>
+    <line x1="22.49" y1="75.00" x2="38.04" y2="62.79" stroke="url(#sg)" stroke-width="1.6" opacity="0.82"/>
+    <line x1="44.13" y1="82.56" x2="63.68" y2="71.07" stroke="url(#sg)" stroke-width="1.6" opacity="0.831"/>
+    <line x1="35.63" y1="38.70" x2="25.11" y2="24.15" stroke="url(#sg)" stroke-width="1.6" opacity="0.831"/>
+    <line x1="79.08" y1="52.95" x2="63.68" y2="71.07" stroke="url(#sg)" stroke-width="1.6" opacity="0.854"/>
+    <line x1="44.13" y1="82.56" x2="38.04" y2="62.79" stroke="url(#sg)" stroke-width="1.6" opacity="0.855"/>
+    <line x1="35.63" y1="38.70" x2="17.38" y2="49.52" stroke="url(#sg)" stroke-width="1.6" opacity="0.856"/>
+    <line x1="17.38" y1="49.52" x2="38.04" y2="62.79" stroke="url(#sg)" stroke-width="1.6" opacity="0.858"/>
+    <line x1="58.84" y1="45.09" x2="75.83" y2="29.60" stroke="url(#sg)" stroke-width="1.6" opacity="0.87"/>
+    <line x1="35.63" y1="38.70" x2="50.50" y2="21.17" stroke="url(#sg)" stroke-width="1.6" opacity="0.878"/>
+    <line x1="79.08" y1="52.95" x2="58.84" y2="45.09" stroke="url(#sg)" stroke-width="1.6" opacity="0.892"/>
+    <line x1="50.50" y1="21.17" x2="58.84" y2="45.09" stroke="url(#sg)" stroke-width="1.6" opacity="0.894"/>
+    <line x1="38.04" y1="62.79" x2="63.68" y2="71.07" stroke="url(#sg)" stroke-width="1.6" opacity="0.897"/>
+    <line x1="58.84" y1="45.09" x2="63.68" y2="71.07" stroke="url(#sg)" stroke-width="1.6" opacity="0.911"/>
+    <line x1="35.63" y1="38.70" x2="38.04" y2="62.79" stroke="url(#sg)" stroke-width="1.6" opacity="0.92"/>
+    <line x1="35.63" y1="38.70" x2="58.84" y2="45.09" stroke="url(#sg)" stroke-width="1.6" opacity="0.934"/>
+    <line x1="58.84" y1="45.09" x2="38.04" y2="62.79" stroke="url(#sg)" stroke-width="1.6" opacity="0.936"/>
+    <circle cx="64.76" cy="12.97" r="1.43" fill="url(#sg)" opacity="0.554"/>
+    <circle cx="44.13" cy="82.56" r="1.6" fill="url(#sg)" opacity="0.697"/>
+    <circle cx="35.63" cy="38.70" r="1.76" fill="url(#sg)" opacity="0.843"/>
+    <circle cx="79.08" cy="52.95" r="1.66" fill="url(#sg)" opacity="0.748"/>
+    <circle cx="9.73" cy="60.06" r="1.34" fill="url(#sg)" opacity="0.484"/>
+    <circle cx="10.20" cy="37.00" r="1.3" fill="url(#sg)" opacity="0.456"/>
+    <circle cx="17.38" cy="49.52" r="1.61" fill="url(#sg)" opacity="0.704"/>
+    <circle cx="25.11" cy="24.15" r="1.55" fill="url(#sg)" opacity="0.65"/>
+    <circle cx="50.50" cy="21.17" r="1.66" fill="url(#sg)" opacity="0.753"/>
+    <circle cx="42.31" cy="9.41" r="1.35" fill="url(#sg)" opacity="0.495"/>
+    <circle cx="58.84" cy="45.09" r="1.8" fill="url(#sg)" opacity="0.88"/>
+    <circle cx="75.83" cy="29.60" r="1.6" fill="url(#sg)" opacity="0.699"/>
+    <circle cx="22.49" cy="75.00" r="1.52" fill="url(#sg)" opacity="0.624"/>
+    <circle cx="38.04" cy="62.79" r="1.77" fill="url(#sg)" opacity="0.847"/>
+    <circle cx="82.02" cy="22.73" r="1.25" fill="url(#sg)" opacity="0.427"/>
+    <circle cx="83.23" cy="70.87" r="1.45" fill="url(#sg)" opacity="0.573"/>
+    <circle cx="63.68" cy="71.07" r="1.71" fill="url(#sg)" opacity="0.791"/>
+    <circle cx="63.02" cy="87.92" r="1.42" fill="url(#sg)" opacity="0.546"/>
+    <circle cx="38.08" cy="90.10" r="1.3" fill="url(#sg)" opacity="0.459"/>
+    <circle cx="90.46" cy="45.75" r="1.39" fill="url(#sg)" opacity="0.524"/>
+  </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">CLOUDSCAN</span>
+        <span class="brand-sub">UAV &amp; Spatial</span>
+      </div>
+    </a>
+    <nav class="nav" aria-label="Primary">
+      <a href="#enablement">Enablement</a>
+      <a href="#regulatory">BVLOS / SORA</a>
+      <a href="#services">Execution</a>
+      <a href="#experience">Experience</a>
+    </nav>
+    <a class="cta-btn" href="#contact">Contact ↗</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <div class="wrap">
+  <section class="hero">
+    <div class="hero-layout">
+      <div class="hero-content fade-up">
+        <div class="kicker"><span class="kicker-dot"></span> RPAS Enablement · BVLOS · SORA · Spatial Delivery</div>
+        <h1 class="hero-headline">Operate where<br>others <span class="accent">can't.</span></h1>
+        <p class="hero-lead">CloudScan enables complex RPAS operations. From controlled airspace allocations to high-assurance documentation, then converting the mission into survey-grade spatial deliverables.</p>
+        <p class="hero-lead" style="font-size:15px;max-width:62ch;color:var(--ink-muted);margin-top:-10px">CloudScan is led by a CASA-licensed Chief Remote Pilot with BVLOS credentials, serving ReOC holders and mining/infrastructure operators across Australia. We combine regulatory expertise with operational experience to deliver compliant UAV solutions.</p>
+        <div class="hero-actions">
+          <a class="cta-btn" href="#contact">Request a scope call</a>
+          <a class="btn-outline" href="#enablement">RPAS Enablement →</a>
+          <a class="btn-outline" href="#services">Spatial Execution →</a>
+        </div>
+        <div class="hero-pills">
+          <span class="tag">BVLOS OCTA rated</span>
+          <span class="tag">SORA capable</span>
+          <span class="tag">CASA instruments</span>
+          <span class="tag">CTR/CTA airspace</span>
+          <span class="tag">UAV LiDAR</span>
+          <span class="tag">Photogrammetry</span>
+        </div>
+      </div>
+      <aside class="stats-panel fade-up" aria-label="Key stats">
+        <div class="stat-item">
+          <div class="stat-num">800<span>+</span></div>
+          <div class="stat-label">UAV hours logged across Australia and international engagements</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">5<span> yrs</span></div>
+          <div class="stat-label">Controlled airspace operations within CTR allocations with robust coordination</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">1000<span>+</span></div>
+          <div class="stat-label">RePL students trained; 20+ Singapore PUB government staff (2018–19)</div>
+        </div>
+      </aside>
+    </div>
+  </section>
+  </div>
+
+  <!-- ENABLEMENT -->
+  <section id="enablement">
+    <div class="wrap">
+      <div class="fade-up">
+        <div class="section-label">RPAS Advisory</div>
+        <h2 class="section-title">Enablement &amp; Strategic Advisory</h2>
+        <p class="section-sub">A clearer pathway from advanced RPAS ambition to practical, regulator-aware implementation. CloudScan helps operators understand what is feasible, what is required, and how to progress with confidence.</p>
+      </div>
+      <div class="grid-3 fade-up">
+        <div class="card">
+          <div class="card-icon">
+            <!-- UAV oblique + BVLOS pathway -->
+            <svg width="28" height="28" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="gi1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#3ecfcf"/>
+                  <stop offset="100%" stop-color="#5ba3f5"/>
+                </linearGradient>
+              </defs>
+              <!-- Dashed horizon path curving away -->
+              <path d="M4 34 Q14 28 24 26 Q34 24 40 14" stroke="url(#gi1)" stroke-width="1.4" stroke-dasharray="2.5 2" fill="none" opacity="0.5"/>
+              <!-- Waypoint dots on path -->
+              <circle cx="14" cy="30" r="1.3" fill="url(#gi1)" opacity="0.6"/>
+              <circle cx="28" cy="24.5" r="1.3" fill="url(#gi1)" opacity="0.7"/>
+              <circle cx="40" cy="14" r="1.8" fill="url(#gi1)" opacity="0.9"/>
+              <!-- UAV body (oblique, nose pointing upper-right) -->
+              <g transform="translate(18,22) rotate(-32)">
+                <!-- fuselage -->
+                <rect x="-7" y="-1.5" width="14" height="3" rx="1.5" fill="url(#gi1)" opacity="0.95"/>
+                <!-- main wings -->
+                <polygon points="-1,-1.5 -1,1.5 -6,6 -7,6 -7,5 -3,1.5" fill="url(#gi1)" opacity="0.85"/>
+                <polygon points="-1,-1.5 -1,1.5 -6,-6 -7,-6 -7,-5 -3,-1.5" fill="url(#gi1)" opacity="0.85"/>
+                <polygon points="2,-1.2 2,1.2 6,4 7,4 7,3.2 3.5,1.2" fill="url(#gi1)" opacity="0.7"/>
+                <polygon points="2,-1.2 2,1.2 6,-4 7,-4 7,-3.2 3.5,-1.2" fill="url(#gi1)" opacity="0.7"/>
+                <!-- tail fin -->
+                <polygon points="-6,-1.5 -7,-1.5 -9,-4 -7,-4" fill="url(#gi1)" opacity="0.8"/>
+              </g>
+              <!-- Distance marker at horizon -->
+              <line x1="37" y1="11" x2="43" y2="11" stroke="url(#gi1)" stroke-width="1" opacity="0.5"/>
+              <line x1="37" y1="17" x2="43" y2="17" stroke="url(#gi1)" stroke-width="1" opacity="0.5"/>
+            </svg>
+          </div>
+          <h3>BVLOS Readiness &amp; Pathways</h3>
+          <p class="card-intro">For operators looking to move beyond visual-line operations, with a grounded pathway shaped around real-world deployment rather than abstract compliance.</p>
+          <ul>
+            <li><strong>BVLOS OCTA rated</strong> aeronautical knowledge supporting eligibility under a ReOC</li>
+            <li><strong>ConOps development</strong> and staged deployment pathways from trial activity to mature operations</li>
+            <li><strong>Operational limitations, mitigations, and assurance controls</strong> framed for internal approval and regulator-facing readiness</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon">
+            <!-- VTC chart extract + magnifying glass -->
+            <svg width="28" height="28" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="gi2" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#3ecfcf"/>
+                  <stop offset="100%" stop-color="#5ba3f5"/>
+                </linearGradient>
+                <clipPath id="mc"><circle cx="17" cy="17" r="13"/></clipPath>
+              </defs>
+              <!-- Chart bg -->
+              <circle cx="17" cy="17" r="13" fill="rgba(62,207,207,0.07)" stroke="url(#gi2)" stroke-width="1.2" opacity="0.45"/>
+              <!-- VTC terrain contour lines -->
+              <g clip-path="url(#mc)" opacity="0.55">
+                <path d="M6 20 Q10 16 14 18 Q18 20 22 15 Q26 10 30 13" stroke="url(#gi2)" stroke-width="1" fill="none"/>
+                <path d="M5 24 Q9 21 13 22 Q17 24 21 20 Q25 16 29 18" stroke="url(#gi2)" stroke-width="1" fill="none"/>
+                <path d="M6 28 Q11 26 15 27 Q19 28 23 25" stroke="url(#gi2)" stroke-width="1" fill="none"/>
+              </g>
+              <!-- Grid lines -->
+              <g clip-path="url(#mc)" opacity="0.22">
+                <line x1="4" y1="12" x2="30" y2="12" stroke="url(#gi2)" stroke-width="0.7"/>
+                <line x1="4" y1="17" x2="30" y2="17" stroke="url(#gi2)" stroke-width="0.7"/>
+                <line x1="4" y1="22" x2="30" y2="22" stroke="url(#gi2)" stroke-width="0.7"/>
+                <line x1="10" y1="4" x2="10" y2="30" stroke="url(#gi2)" stroke-width="0.7"/>
+                <line x1="17" y1="4" x2="17" y2="30" stroke="url(#gi2)" stroke-width="0.7"/>
+                <line x1="24" y1="4" x2="24" y2="30" stroke="url(#gi2)" stroke-width="0.7"/>
+              </g>
+              <!-- Risk zone polygon (dashed) -->
+              <polygon points="13,13 21,11 24,18 18,22 11,19" stroke="url(#gi2)" stroke-width="1.2" fill="rgba(91,163,245,0.12)" stroke-dasharray="2 1.5" clip-path="url(#mc)" opacity="0.85"/>
+              <!-- Magnifying glass handle -->
+              <line x1="27" y1="27" x2="39" y2="39" stroke="url(#gi2)" stroke-width="2.5" stroke-linecap="round" opacity="0.85"/>
+              <!-- Lens ring (crisp) -->
+              <circle cx="17" cy="17" r="13" stroke="url(#gi2)" stroke-width="1.8" fill="none" opacity="0.9"/>
+            </svg>
+          </div>
+          <h3>SORA-Informed Risk Planning</h3>
+          <p class="card-intro">A structured risk lens for more complex RPAS operations, translating SORA-style thinking into practical assessment material for Australian operating contexts.</p>
+          <ul>
+            <li><strong>SORA-capable</strong> risk assessment support for complex RPAS scenarios and non-standard operating environments</li>
+            <li><strong>Air and ground risk modelling</strong> aligned to terrain, people, infrastructure, and surrounding airspace</li>
+            <li><strong>Mitigation packages</strong> suitable for regulatory submission, internal assurance, and audit traceability</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-icon">
+            <!-- VTC extract with CTR dashed boundary zone -->
+            <svg width="28" height="28" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="gi3" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#3ecfcf"/>
+                  <stop offset="100%" stop-color="#5ba3f5"/>
+                </linearGradient>
+              </defs>
+              <!-- Chart background -->
+              <rect x="3" y="3" width="38" height="38" rx="3" fill="rgba(62,207,207,0.05)" stroke="url(#gi3)" stroke-width="0.8" opacity="0.3"/>
+              <!-- Terrain contour lines (VTC style) -->
+              <path d="M3 28 Q8 24 13 26 Q18 28 23 23 Q28 18 34 21 Q38 23 41 20" stroke="url(#gi3)" stroke-width="0.9" fill="none" opacity="0.35"/>
+              <path d="M3 33 Q9 30 14 31 Q19 32 24 28 Q30 24 36 27 Q39 28 41 26" stroke="url(#gi3)" stroke-width="0.9" fill="none" opacity="0.25"/>
+              <!-- VTC grid -->
+              <g opacity="0.18">
+                <line x1="3" y1="14" x2="41" y2="14" stroke="url(#gi3)" stroke-width="0.7"/>
+                <line x1="3" y1="22" x2="41" y2="22" stroke="url(#gi3)" stroke-width="0.7"/>
+                <line x1="3" y1="30" x2="41" y2="30" stroke="url(#gi3)" stroke-width="0.7"/>
+                <line x1="14" y1="3" x2="14" y2="41" stroke="url(#gi3)" stroke-width="0.7"/>
+                <line x1="22" y1="3" x2="22" y2="41" stroke="url(#gi3)" stroke-width="0.7"/>
+                <line x1="30" y1="3" x2="30" y2="41" stroke="url(#gi3)" stroke-width="0.7"/>
+              </g>
+              <!-- CTR boundary — classic aviation dashed circle -->
+              <circle cx="22" cy="21" r="13" stroke="url(#gi3)" stroke-width="1.6" fill="rgba(62,207,207,0.07)" stroke-dasharray="3.5 2.2" opacity="0.92"/>
+              <!-- Airport symbol at centre -->
+              <!-- Outer ring -->
+              <circle cx="22" cy="21" r="3.2" stroke="url(#gi3)" stroke-width="1.2" fill="none" opacity="0.9"/>
+              <!-- Runway cross -->
+              <line x1="22" y1="17.5" x2="22" y2="24.5" stroke="url(#gi3)" stroke-width="1.4" stroke-linecap="round" opacity="0.9"/>
+              <line x1="18.5" y1="21" x2="25.5" y2="21" stroke="url(#gi3)" stroke-width="1.4" stroke-linecap="round" opacity="0.9"/>
+              <!-- CTA label ticks at compass points of CTR -->
+              <line x1="22" y1="7.5" x2="22" y2="9.5" stroke="url(#gi3)" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>
+              <line x1="22" y1="32.5" x2="22" y2="34.5" stroke="url(#gi3)" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>
+              <line x1="8.5" y1="21" x2="10.5" y2="21" stroke="url(#gi3)" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>
+              <line x1="33.5" y1="21" x2="35.5" y2="21" stroke="url(#gi3)" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>
+            </svg>
+          </div>
+          <h3>CASA Instruments &amp; Controlled Airspace</h3>
+          <p class="card-intro">Where airspace complexity, controller coordination, or instrument-based approvals become the difference between a concept and an executable mission.</p>
+          <ul>
+            <li><strong>CASA instrument grant pathway support</strong> for operations requiring a tailored regulatory approach</li>
+            <li><strong>Controlled airspace experience</strong> including CTR/CTA planning considerations and allocation contexts</li>
+            <li><strong>Coordination with controlled aerodrome environments</strong> where mission success depends on disciplined stakeholder alignment</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card-full fade-up" style="margin-top:16px">
+        <h3 style="font-family:var(--display);font-size:20px;font-weight:800;color:#fff;margin-bottom:8px">Governance, Assurance &amp; Capability Uplift</h3>
+        <p style="font-size:14px;color:var(--ink-dim);margin-bottom:14px">Build RPAS programs that stand up to scrutiny from CASA, airports, internal auditors, and executive leadership — not just on paper, but in how the operation is actually run.</p>
+        <div class="pill-row">
+          <span class="pill">Operational manuals &amp; SOC/SOPs</span>
+          <span class="pill">Safety cases &amp; risk registers</span>
+          <span class="pill">QA + audit-ready documentation</span>
+          <span class="pill">Team training &amp; stakeholder uplift</span>
+        </div>
+        <p class="note-text" style="margin-top:14px">Note: Approvals depend on site, airspace class, aerodrome requirements, and applicable regulatory instruments. CloudScan can help define the pathway and documentation package.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BVLOS / SORA -->
+  <section id="regulatory">
+    <div class="wrap">
+      <div class="section-divider"></div>
+      <div class="fade-up" style="padding-top:60px">
+        <div class="section-label">Regulatory</div>
+        <h2 class="section-title">BVLOS / SORA Capability</h2>
+        <p class="section-sub">Aviation-first thinking with spatial outcomes built in.</p>
+      </div>
+      <div class="reg-grid fade-up">
+        <div class="card">
+          <h3>What Clients Get</h3>
+          <ul>
+            <li>A clear operating pathway: what's possible, what's required, and the decision gates</li>
+            <li>Risk controls that match each mission profile.</li>
+            <li>Documentation suitable for internal governance and external approvals</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Where This Matters</h3>
+          <ul>
+            <li>Controlled airspace, aerodrome environments, or complex stakeholder coordination</li>
+            <li>High-consequence environments: mining, utilities, critical infrastructure</li>
+            <li>Programs moving from ad-hoc flights into repeatable, auditable RPAS operations</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SPATIAL EXECUTION -->
+  <section id="services">
+    <div class="wrap">
+      <div class="section-divider"></div>
+      <div class="fade-up" style="padding-top:60px">
+        <div class="section-label">Spatial Execution</div>
+        <h2 class="section-title">Deliverables &amp; Outcomes</h2>
+        <p class="section-sub">Survey-grade outputs when the mission demands more than a standard drone flight.</p>
+      </div>
+      <div class="grid-3 fade-up">
+        <div class="card">
+          <div class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" fill="none">
+              <rect x="24" y="10" width="16" height="8" rx="3" fill="currentColor"/>
+              <rect x="29" y="5" width="6" height="6" rx="2" fill="currentColor" opacity="0.82"/>
+              <line x1="24" y1="14" x2="16" y2="14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" opacity="0.92"/>
+              <line x1="40" y1="14" x2="48" y2="14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" opacity="0.92"/>
+              <circle cx="14" cy="14" r="3" stroke="currentColor" stroke-width="2" opacity="0.86"/>
+              <circle cx="50" cy="14" r="3" stroke="currentColor" stroke-width="2" opacity="0.86"/>
+              <circle cx="32" cy="25" r="2.4" fill="currentColor"/>
+              <line class="swath-ray" x1="32" y1="28" x2="14" y2="51" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity="0.45"/>
+              <line class="swath-ray" x1="32" y1="28" x2="22" y2="51" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity="0.65"/>
+              <line class="swath-ray" x1="32" y1="28" x2="32" y2="51" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity="1"/>
+              <line class="swath-ray" x1="32" y1="28" x2="42" y2="51" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity="0.65"/>
+              <line class="swath-ray" x1="32" y1="28" x2="50" y2="51" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity="0.45"/>
+              <circle cx="14" cy="54" r="1.7" fill="currentColor" opacity="0.45"/>
+              <circle cx="22" cy="54" r="1.7" fill="currentColor" opacity="0.65"/>
+              <circle cx="32" cy="54" r="1.7" fill="currentColor"/>
+              <circle cx="42" cy="54" r="1.7" fill="currentColor" opacity="0.65"/>
+              <circle cx="50" cy="54" r="1.7" fill="currentColor" opacity="0.45"/>
+            </svg>
+          </div>
+          <h3>UAV LiDAR</h3>
+          <p>High-density point clouds for terrain, corridors, vegetation-challenged sites, and operational change detection.</p>
+          <div class="pill-row">
+            <span class="pill">LAS/LAZ</span><span class="pill">DTM/DSM</span><span class="pill">Volumes</span><span class="pill">Contours</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" fill="none">
+              <rect x="22" y="9" width="20" height="10" rx="3" fill="currentColor"/>
+              <circle cx="32" cy="14" r="3" fill="currentColor" opacity="0.18"/>
+              <circle cx="32" cy="14" r="1.3" fill="currentColor"/>
+              <path d="M32 22 L15 34 L32 46 L49 34 Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" opacity="0.92"/>
+              <path d="M20 35 H44" stroke="currentColor" stroke-width="1.8" opacity="0.9"/>
+              <path d="M24 31 V43" stroke="currentColor" stroke-width="1.8" opacity="0.55"/>
+              <path d="M32 27 V47" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M40 31 V43" stroke="currentColor" stroke-width="1.8" opacity="0.55"/>
+              <circle cx="15" cy="34" r="1.8" fill="currentColor" opacity="0.55"/>
+              <circle cx="32" cy="46" r="1.8" fill="currentColor"/>
+              <circle cx="49" cy="34" r="1.8" fill="currentColor" opacity="0.55"/>
+              <circle cx="32" cy="22" r="1.8" fill="currentColor" opacity="0.75"/>
+            </svg>
+          </div>
+          <h3>Photogrammetry</h3>
+          <p>Orthomosaics and surfaces for progress mapping, planning, and engineering workflows.</p>
+          <div class="pill-row">
+            <span class="pill">Ortho</span><span class="pill">GeoTIFF</span><span class="pill">CAD/GIS</span><span class="pill">QA notes</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" fill="none">
+              <path d="M22 10H36L44 18V50C44 52.2 42.2 54 40 54H22C19.8 54 18 52.2 18 50V14C18 11.8 19.8 10 22 10Z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+              <path d="M36 10V18H44" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+              <line x1="24" y1="25" x2="39" y2="25" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+              <line x1="24" y1="31" x2="35" y2="31" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+              <line x1="24" y1="37" x2="33" y2="37" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+              <circle cx="41" cy="42" r="8" stroke="currentColor" stroke-width="2.2"/>
+              <path d="M37.5 42.2L40 44.7L44.8 39.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3>QA &amp; Reporting</h3>
+          <p>Fit-for-purpose statements, check reporting, and handover packs that reduce rework and confusion.</p>
+          <div class="pill-row">
+            <span class="pill">Metadata</span><span class="pill">Checks</span><span class="pill">Manifest</span><span class="pill">Audit-friendly</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXPERIENCE -->
+  <section id="experience">
+    <div class="wrap">
+      <div class="section-divider"></div>
+      <div class="fade-up" style="padding-top:60px">
+        <div class="section-label">Track Record</div>
+        <h2 class="section-title">Selected Experience</h2>
+        <p class="section-sub">Enablement and results oriented capability.</p>
+      </div>
+      <div class="grid-2 fade-up">
+        <div class="card">
+          <ul>
+            <li><strong>Singapore PUB (2018–2019):</strong> Trained 20+ government staff in RPAS operations and asset inspection workflows.</li>
+            <li><strong>RePL training (Australia-wide):</strong> Delivered RPAS training to 1000+ students.</li>
+            <li><strong>Controlled airspace ops:</strong> CASA instrument experience supporting RPAS operations within CTR over ~5 years.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <ul>
+            <li><strong>NSW UAV LiDAR:</strong> Multiple development and terrain surveys across regional NSW.</li>
+            <li><strong>Education &amp; demos:</strong> UAV LiDAR survey involvement with Lismore TAFE.</li>
+            <li><strong>Surveying foundation:</strong> Engineering + mining context ensuring outputs are fit for decision-making.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="exp-pills fade-up">
+        <span class="tag">RPAS enablement</span>
+        <span class="tag">BVLOS pathway readiness</span>
+        <span class="tag">SORA planning</span>
+        <span class="tag">Controlled airspace</span>
+        <span class="tag">Survey-grade delivery</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="wrap">
+      <div class="section-divider"></div>
+      <div class="fade-up" style="padding-top:60px">
+        <div class="section-label">Get in Touch</div>
+        <h2 class="section-title">Let's Discuss Your Operations</h2>
+        <p class="section-sub">Ready to enable your RPAS operations? Send us an inquiry and we'll respond within one business day.</p>
+      </div>
+      <div class="contact-grid fade-up">
+        <div class="card">
+          <h3>Quick Enquiry</h3>
+          <form id="contactForm">
+            <label>Your name</label>
+            <input name="name" required placeholder="Your name" />
+            <label>Email</label>
+            <input name="email" type="email" required placeholder="you@company.com" />
+            <label>Project details</label>
+            <textarea name="details" rows="5" required placeholder="Airspace / location, mission intent, timeline, deliverables…"></textarea>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px">
+              <button class="cta-btn" type="submit" style="font-size:14px">Send enquiry</button>
+              <button class="btn-outline" type="button" id="copyEmail" style="font-size:14px">Copy email</button>
+            </div>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Direct Contact</h3>
+          <div class="contact-info-item">
+            <div class="contact-info-icon">✉</div>
+            <div>
+              <div class="contact-info-label">Email</div>
+              <div class="contact-info-val"><a id="emailLink" href="mailto:go@cloudscan.au">go@cloudscan.au</a></div>
+            </div>
+          </div>
+          <div class="contact-info-item">
+            <div class="contact-info-icon">in</div>
+            <div>
+              <div class="contact-info-label">LinkedIn</div>
+              <div class="contact-info-val"><a href="https://www.linkedin.com/in/g-olivares/" target="_blank">linkedin.com/in/g-olivares</a></div>
+            </div>
+          </div>
+          <div class="contact-info-item">
+            <div class="contact-info-icon">📍</div>
+            <div>
+              <div class="contact-info-label">Location</div>
+              <div class="contact-info-val">Adelaide, South Australia</div>
+            </div>
+          </div>
+          <p class="note-text" style="margin-top:16px">Cloudscan 2026.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap footer-inner">
+    <div style="display:flex;align-items:center;gap:12px">
+      <svg width="22" height="22" viewBox="0 0 100 100" fill="none">
+    <defs><linearGradient id="fg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#3ecfcf"/><stop offset="100%" stop-color="#5ba3f5"/></linearGradient></defs>
+    <line x1="60.71" y1="38.55" x2="42.14" y2="54.37" stroke="url(#fg)" stroke-width="1.0" opacity="0.183"/>
+    <line x1="62.88" y1="60.13" x2="42.14" y2="54.37" stroke="url(#fg)" stroke-width="1.0" opacity="0.184"/>
+    <line x1="62.88" y1="60.13" x2="60.71" y2="38.55" stroke="url(#fg)" stroke-width="1.0" opacity="0.188"/>
+    <line x1="37.60" y1="30.91" x2="42.14" y2="54.37" stroke="url(#fg)" stroke-width="1.0" opacity="0.191"/>
+    <line x1="37.60" y1="30.91" x2="60.71" y2="38.55" stroke="url(#fg)" stroke-width="1.0" opacity="0.197"/>
+    <line x1="42.14" y1="54.37" x2="49.54" y2="76.34" stroke="url(#fg)" stroke-width="1.0" opacity="0.198"/>
+    <line x1="23.41" y1="47.31" x2="42.14" y2="54.37" stroke="url(#fg)" stroke-width="1.0" opacity="0.199"/>
+    <line x1="62.88" y1="60.13" x2="49.54" y2="76.34" stroke="url(#fg)" stroke-width="1.0" opacity="0.205"/>
+    <line x1="26.13" y1="68.86" x2="42.14" y2="54.37" stroke="url(#fg)" stroke-width="1.0" opacity="0.21"/>
+    <line x1="60.71" y1="38.55" x2="80.12" y2="50.45" stroke="url(#fg)" stroke-width="1.0" opacity="0.215"/>
+    <line x1="62.88" y1="60.13" x2="80.12" y2="50.45" stroke="url(#fg)" stroke-width="1.0" opacity="0.216"/>
+    <line x1="55.43" y1="19.89" x2="60.71" y2="38.55" stroke="url(#fg)" stroke-width="1.0" opacity="0.217"/>
+    <line x1="23.41" y1="47.31" x2="37.60" y2="30.91" stroke="url(#fg)" stroke-width="1.0" opacity="0.217"/>
+    <line x1="62.88" y1="60.13" x2="73.26" y2="74.16" stroke="url(#fg)" stroke-width="1.0" opacity="0.23"/>
+    <line x1="55.43" y1="19.89" x2="37.60" y2="30.91" stroke="url(#fg)" stroke-width="1.0" opacity="0.23"/>
+    <line x1="60.71" y1="38.55" x2="75.87" y2="26.49" stroke="url(#fg)" stroke-width="1.0" opacity="0.236"/>
+    <line x1="26.13" y1="68.86" x2="49.54" y2="76.34" stroke="url(#fg)" stroke-width="1.0" opacity="0.239"/>
+    <line x1="23.41" y1="47.31" x2="26.13" y2="68.86" stroke="url(#fg)" stroke-width="1.0" opacity="0.24"/>
+    <line x1="49.54" y1="76.34" x2="73.26" y2="74.16" stroke="url(#fg)" stroke-width="1.0" opacity="0.252"/>
+    <line x1="37.60" y1="30.91" x2="18.37" y2="30.14" stroke="url(#fg)" stroke-width="1.0" opacity="0.265"/>
+    <line x1="73.26" y1="74.16" x2="80.12" y2="50.45" stroke="url(#fg)" stroke-width="1.0" opacity="0.266"/>
+    <line x1="75.87" y1="26.49" x2="80.12" y2="50.45" stroke="url(#fg)" stroke-width="1.0" opacity="0.274"/>
+    <line x1="37.53" y1="13.66" x2="37.60" y2="30.91" stroke="url(#fg)" stroke-width="1.0" opacity="0.274"/>
+    <line x1="55.43" y1="19.89" x2="75.87" y2="26.49" stroke="url(#fg)" stroke-width="1.0" opacity="0.276"/>
+    <line x1="23.41" y1="47.31" x2="18.37" y2="30.14" stroke="url(#fg)" stroke-width="1.0" opacity="0.277"/>
+    <line x1="35.89" y1="85.41" x2="49.54" y2="76.34" stroke="url(#fg)" stroke-width="1.0" opacity="0.282"/>
+    <line x1="23.41" y1="47.31" x2="11.01" y2="54.10" stroke="url(#fg)" stroke-width="1.0" opacity="0.293"/>
+    <line x1="35.89" y1="85.41" x2="26.13" y2="68.86" stroke="url(#fg)" stroke-width="1.0" opacity="0.298"/>
+    <line x1="55.43" y1="19.89" x2="37.53" y2="13.66" stroke="url(#fg)" stroke-width="1.0" opacity="0.301"/>
+    <line x1="57.47" y1="89.40" x2="49.54" y2="76.34" stroke="url(#fg)" stroke-width="1.0" opacity="0.303"/>
+    <line x1="11.01" y1="54.10" x2="26.13" y2="68.86" stroke="url(#fg)" stroke-width="1.0" opacity="0.308"/>
+    <line x1="89.22" y1="40.21" x2="80.12" y2="50.45" stroke="url(#fg)" stroke-width="1.0" opacity="0.322"/>
+    <line x1="80.12" y1="50.45" x2="89.06" y2="62.75" stroke="url(#fg)" stroke-width="1.0" opacity="0.333"/>
+    <line x1="55.43" y1="19.89" x2="61.69" y2="10.68" stroke="url(#fg)" stroke-width="1.0" opacity="0.334"/>
+    <line x1="57.47" y1="89.40" x2="73.26" y2="74.16" stroke="url(#fg)" stroke-width="1.0" opacity="0.336"/>
+    <line x1="37.53" y1="13.66" x2="18.37" y2="30.14" stroke="url(#fg)" stroke-width="1.0" opacity="0.343"/>
+    <line x1="26.13" y1="68.86" x2="18.32" y2="76.98" stroke="url(#fg)" stroke-width="1.0" opacity="0.347"/>
+    <line x1="89.22" y1="40.21" x2="75.87" y2="26.49" stroke="url(#fg)" stroke-width="1.0" opacity="0.349"/>
+    <line x1="73.26" y1="74.16" x2="89.06" y2="62.75" stroke="url(#fg)" stroke-width="1.0" opacity="0.352"/>
+    <line x1="18.37" y1="30.14" x2="11.01" y2="54.10" stroke="url(#fg)" stroke-width="1.0" opacity="0.352"/>
+    <line x1="61.69" y1="10.68" x2="75.87" y2="26.49" stroke="url(#fg)" stroke-width="1.0" opacity="0.359"/>
+    <line x1="35.89" y1="85.41" x2="57.47" y2="89.40" stroke="url(#fg)" stroke-width="1.0" opacity="0.37"/>
+    <line x1="77.26" y1="81.74" x2="73.26" y2="74.16" stroke="url(#fg)" stroke-width="1.0" opacity="0.372"/>
+    <line x1="61.69" y1="10.68" x2="37.53" y2="13.66" stroke="url(#fg)" stroke-width="1.0" opacity="0.389"/>
+    <line x1="35.89" y1="85.41" x2="18.32" y2="76.98" stroke="url(#fg)" stroke-width="1.0" opacity="0.4"/>
+    <line x1="82.02" y1="22.73" x2="75.87" y2="26.49" stroke="url(#fg)" stroke-width="1.0" opacity="0.407"/>
+    <line x1="11.01" y1="54.10" x2="18.32" y2="76.98" stroke="url(#fg)" stroke-width="1.0" opacity="0.412"/>
+    <line x1="89.22" y1="40.21" x2="89.06" y2="62.75" stroke="url(#fg)" stroke-width="1.0" opacity="0.416"/>
+    <line x1="22.59" y1="18.08" x2="18.37" y2="30.14" stroke="url(#fg)" stroke-width="1.0" opacity="0.419"/>
+    <line x1="22.59" y1="18.08" x2="37.53" y2="13.66" stroke="url(#fg)" stroke-width="1.0" opacity="0.43"/>
+    <line x1="77.26" y1="81.74" x2="57.47" y2="89.40" stroke="url(#fg)" stroke-width="1.0" opacity="0.433"/>
+    <line x1="10.20" y1="37.00" x2="18.37" y2="30.14" stroke="url(#fg)" stroke-width="1.0" opacity="0.441"/>
+    <line x1="35.89" y1="85.41" x2="38.08" y2="90.10" stroke="url(#fg)" stroke-width="1.0" opacity="0.45"/>
+    <line x1="77.26" y1="81.74" x2="89.06" y2="62.75" stroke="url(#fg)" stroke-width="1.0" opacity="0.451"/>
+    <line x1="10.20" y1="37.00" x2="11.01" y2="54.10" stroke="url(#fg)" stroke-width="1.0" opacity="0.461"/>
+    <line x1="89.22" y1="40.21" x2="82.02" y2="22.73" stroke="url(#fg)" stroke-width="1.0" opacity="0.466"/>
+    <line x1="42.31" y1="9.41" x2="37.53" y2="13.66" stroke="url(#fg)" stroke-width="1.0" opacity="0.47"/>
+    <line x1="9.73" y1="60.06" x2="11.01" y2="54.10" stroke="url(#fg)" stroke-width="1.0" opacity="0.474"/>
+    <line x1="38.08" y1="90.10" x2="57.47" y2="89.40" stroke="url(#fg)" stroke-width="1.0" opacity="0.476"/>
+    <line x1="61.69" y1="10.68" x2="82.02" y2="22.73" stroke="url(#fg)" stroke-width="1.0" opacity="0.477"/>
+    <line x1="18.32" y1="76.98" x2="38.08" y2="90.10" stroke="url(#fg)" stroke-width="1.0" opacity="0.509"/>
+    <line x1="42.31" y1="9.41" x2="61.69" y2="10.68" stroke="url(#fg)" stroke-width="1.0" opacity="0.51"/>
+    <line x1="89.22" y1="40.21" x2="90.46" y2="45.75" stroke="url(#fg)" stroke-width="1.0" opacity="0.511"/>
+    <line x1="63.02" y1="87.92" x2="57.47" y2="89.40" stroke="url(#fg)" stroke-width="1.0" opacity="0.516"/>
+    <line x1="9.73" y1="60.06" x2="18.32" y2="76.98" stroke="url(#fg)" stroke-width="1.0" opacity="0.52"/>
+    <line x1="89.06" y1="62.75" x2="90.46" y2="45.75" stroke="url(#fg)" stroke-width="1.0" opacity="0.525"/>
+    <line x1="22.59" y1="18.08" x2="10.20" y2="37.00" stroke="url(#fg)" stroke-width="1.0" opacity="0.536"/>
+    <line x1="64.76" y1="12.97" x2="61.69" y2="10.68" stroke="url(#fg)" stroke-width="1.0" opacity="0.537"/>
+    <line x1="83.23" y1="70.87" x2="89.06" y2="62.75" stroke="url(#fg)" stroke-width="1.0" opacity="0.547"/>
+    <line x1="22.59" y1="18.08" x2="42.31" y2="9.41" stroke="url(#fg)" stroke-width="1.0" opacity="0.555"/>
+    <line x1="77.26" y1="81.74" x2="63.02" y2="87.92" stroke="url(#fg)" stroke-width="1.0" opacity="0.559"/>
+    <line x1="77.26" y1="81.74" x2="83.23" y2="70.87" stroke="url(#fg)" stroke-width="1.0" opacity="0.571"/>
+    <line x1="9.73" y1="60.06" x2="10.20" y2="37.00" stroke="url(#fg)" stroke-width="1.0" opacity="0.574"/>
+    <line x1="82.02" y1="22.73" x2="90.46" y2="45.75" stroke="url(#fg)" stroke-width="1.6" opacity="0.578"/>
+    <line x1="22.49" y1="75.00" x2="18.32" y2="76.98" stroke="url(#fg)" stroke-width="1.6" opacity="0.584"/>
+    <line x1="64.76" y1="12.97" x2="82.02" y2="22.73" stroke="url(#fg)" stroke-width="1.6" opacity="0.592"/>
+    <line x1="63.02" y1="87.92" x2="38.08" y2="90.10" stroke="url(#fg)" stroke-width="1.6" opacity="0.605"/>
+    <line x1="22.59" y1="18.08" x2="25.11" y2="24.15" stroke="url(#fg)" stroke-width="1.6" opacity="0.626"/>
+    <line x1="64.76" y1="12.97" x2="42.31" y2="9.41" stroke="url(#fg)" stroke-width="1.6" opacity="0.627"/>
+    <line x1="22.49" y1="75.00" x2="38.08" y2="90.10" stroke="url(#fg)" stroke-width="1.6" opacity="0.641"/>
+    <line x1="83.23" y1="70.87" x2="90.46" y2="45.75" stroke="url(#fg)" stroke-width="1.6" opacity="0.651"/>
+    <line x1="10.20" y1="37.00" x2="25.11" y2="24.15" stroke="url(#fg)" stroke-width="1.6" opacity="0.651"/>
+    <line x1="9.73" y1="60.06" x2="22.49" y2="75.00" stroke="url(#fg)" stroke-width="1.6" opacity="0.654"/>
+    <line x1="75.83" y1="29.60" x2="82.02" y2="22.73" stroke="url(#fg)" stroke-width="1.6" opacity="0.657"/>
+    <line x1="83.23" y1="70.87" x2="63.02" y2="87.92" stroke="url(#fg)" stroke-width="1.6" opacity="0.661"/>
+    <line x1="25.11" y1="24.15" x2="42.31" y2="9.41" stroke="url(#fg)" stroke-width="1.6" opacity="0.671"/>
+    <line x1="44.13" y1="82.56" x2="38.08" y2="90.10" stroke="url(#fg)" stroke-width="1.6" opacity="0.673"/>
+    <line x1="10.20" y1="37.00" x2="17.38" y2="49.52" stroke="url(#fg)" stroke-width="1.6" opacity="0.674"/>
+    <line x1="9.73" y1="60.06" x2="17.38" y2="49.52" stroke="url(#fg)" stroke-width="1.6" opacity="0.689"/>
+    <line x1="75.83" y1="29.60" x2="90.46" y2="45.75" stroke="url(#fg)" stroke-width="1.6" opacity="0.708"/>
+    <line x1="50.50" y1="21.17" x2="42.31" y2="9.41" stroke="url(#fg)" stroke-width="1.6" opacity="0.716"/>
+    <line x1="44.13" y1="82.56" x2="63.02" y2="87.92" stroke="url(#fg)" stroke-width="1.6" opacity="0.718"/>
+    <line x1="64.76" y1="12.97" x2="75.83" y2="29.60" stroke="url(#fg)" stroke-width="1.6" opacity="0.723"/>
+    <line x1="79.08" y1="52.95" x2="90.46" y2="45.75" stroke="url(#fg)" stroke-width="1.6" opacity="0.729"/>
+    <line x1="64.76" y1="12.97" x2="50.50" y2="21.17" stroke="url(#fg)" stroke-width="1.6" opacity="0.746"/>
+    <line x1="79.08" y1="52.95" x2="83.23" y2="70.87" stroke="url(#fg)" stroke-width="1.6" opacity="0.753"/>
+    <line x1="44.13" y1="82.56" x2="22.49" y2="75.00" stroke="url(#fg)" stroke-width="1.6" opacity="0.755"/>
+    <line x1="63.68" y1="71.07" x2="63.02" y2="87.92" stroke="url(#fg)" stroke-width="1.6" opacity="0.758"/>
+    <line x1="17.38" y1="49.52" x2="22.49" y2="75.00" stroke="url(#fg)" stroke-width="1.6" opacity="0.758"/>
+    <line x1="17.38" y1="49.52" x2="25.11" y2="24.15" stroke="url(#fg)" stroke-width="1.6" opacity="0.77"/>
+    <line x1="83.23" y1="70.87" x2="63.68" y2="71.07" stroke="url(#fg)" stroke-width="1.6" opacity="0.772"/>
+    <line x1="25.11" y1="24.15" x2="50.50" y2="21.17" stroke="url(#fg)" stroke-width="1.6" opacity="0.792"/>
+    <line x1="79.08" y1="52.95" x2="75.83" y2="29.60" stroke="url(#fg)" stroke-width="1.6" opacity="0.813"/>
+    <line x1="50.50" y1="21.17" x2="75.83" y2="29.60" stroke="url(#fg)" stroke-width="1.6" opacity="0.815"/>
+    <line x1="22.49" y1="75.00" x2="38.04" y2="62.79" stroke="url(#fg)" stroke-width="1.6" opacity="0.82"/>
+    <line x1="44.13" y1="82.56" x2="63.68" y2="71.07" stroke="url(#fg)" stroke-width="1.6" opacity="0.831"/>
+    <line x1="35.63" y1="38.70" x2="25.11" y2="24.15" stroke="url(#fg)" stroke-width="1.6" opacity="0.831"/>
+    <line x1="79.08" y1="52.95" x2="63.68" y2="71.07" stroke="url(#fg)" stroke-width="1.6" opacity="0.854"/>
+    <line x1="44.13" y1="82.56" x2="38.04" y2="62.79" stroke="url(#fg)" stroke-width="1.6" opacity="0.855"/>
+    <line x1="35.63" y1="38.70" x2="17.38" y2="49.52" stroke="url(#fg)" stroke-width="1.6" opacity="0.856"/>
+    <line x1="17.38" y1="49.52" x2="38.04" y2="62.79" stroke="url(#fg)" stroke-width="1.6" opacity="0.858"/>
+    <line x1="58.84" y1="45.09" x2="75.83" y2="29.60" stroke="url(#fg)" stroke-width="1.6" opacity="0.87"/>
+    <line x1="35.63" y1="38.70" x2="50.50" y2="21.17" stroke="url(#fg)" stroke-width="1.6" opacity="0.878"/>
+    <line x1="79.08" y1="52.95" x2="58.84" y2="45.09" stroke="url(#fg)" stroke-width="1.6" opacity="0.892"/>
+    <line x1="50.50" y1="21.17" x2="58.84" y2="45.09" stroke="url(#fg)" stroke-width="1.6" opacity="0.894"/>
+    <line x1="38.04" y1="62.79" x2="63.68" y2="71.07" stroke="url(#fg)" stroke-width="1.6" opacity="0.897"/>
+    <line x1="58.84" y1="45.09" x2="63.68" y2="71.07" stroke="url(#fg)" stroke-width="1.6" opacity="0.911"/>
+    <line x1="35.63" y1="38.70" x2="38.04" y2="62.79" stroke="url(#fg)" stroke-width="1.6" opacity="0.92"/>
+    <line x1="35.63" y1="38.70" x2="58.84" y2="45.09" stroke="url(#fg)" stroke-width="1.6" opacity="0.934"/>
+    <line x1="58.84" y1="45.09" x2="38.04" y2="62.79" stroke="url(#fg)" stroke-width="1.6" opacity="0.936"/>
+    <circle cx="64.76" cy="12.97" r="1.43" fill="url(#fg)" opacity="0.554"/>
+    <circle cx="44.13" cy="82.56" r="1.6" fill="url(#fg)" opacity="0.697"/>
+    <circle cx="35.63" cy="38.70" r="1.76" fill="url(#fg)" opacity="0.843"/>
+    <circle cx="79.08" cy="52.95" r="1.66" fill="url(#fg)" opacity="0.748"/>
+    <circle cx="9.73" cy="60.06" r="1.34" fill="url(#fg)" opacity="0.484"/>
+    <circle cx="10.20" cy="37.00" r="1.3" fill="url(#fg)" opacity="0.456"/>
+    <circle cx="17.38" cy="49.52" r="1.61" fill="url(#fg)" opacity="0.704"/>
+    <circle cx="25.11" cy="24.15" r="1.55" fill="url(#fg)" opacity="0.65"/>
+    <circle cx="50.50" cy="21.17" r="1.66" fill="url(#fg)" opacity="0.753"/>
+    <circle cx="42.31" cy="9.41" r="1.35" fill="url(#fg)" opacity="0.495"/>
+    <circle cx="58.84" cy="45.09" r="1.8" fill="url(#fg)" opacity="0.88"/>
+    <circle cx="75.83" cy="29.60" r="1.6" fill="url(#fg)" opacity="0.699"/>
+    <circle cx="22.49" cy="75.00" r="1.52" fill="url(#fg)" opacity="0.624"/>
+    <circle cx="38.04" cy="62.79" r="1.77" fill="url(#fg)" opacity="0.847"/>
+    <circle cx="82.02" cy="22.73" r="1.25" fill="url(#fg)" opacity="0.427"/>
+    <circle cx="83.23" cy="70.87" r="1.45" fill="url(#fg)" opacity="0.573"/>
+    <circle cx="63.68" cy="71.07" r="1.71" fill="url(#fg)" opacity="0.791"/>
+    <circle cx="63.02" cy="87.92" r="1.42" fill="url(#fg)" opacity="0.546"/>
+    <circle cx="38.08" cy="90.10" r="1.3" fill="url(#fg)" opacity="0.459"/>
+    <circle cx="90.46" cy="45.75" r="1.39" fill="url(#fg)" opacity="0.524"/>
+  </svg>
+      <span>© <span id="year"></span> CloudScan — RPAS Enablement · BVLOS · SORA · Spatial</span>
+    </div>
+    <span>Adelaide, SA · <a href="/cdn-cgi/l/email-protection#90f8f5fcfcffd0f3fcffe5f4e3f3f1febef3fffd"><span class="__cf_email__" data-cfemail="365e535a5a5976555a594352455557581855595b">[email&#160;protected]</span></a></span>
+  </div>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  // ── CONFIG ──────────────────────────────────────────────────────────────
+  const CONTACT_EMAIL = "go@cloudscan.au";
+
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  document.getElementById('copyEmail').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(CONTACT_EMAIL); alert('Email copied!'); }
+    catch { alert('Please copy manually: ' + CONTACT_EMAIL); }
+  });
+
+  document.getElementById('contactForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const data = new FormData(e.target);
+    const name = data.get('name'), email = data.get('email'), details = data.get('details');
+    const subject = encodeURIComponent('CloudScan enquiry — ' + name);
+    const body = encodeURIComponent('Name: ' + name + '\nEmail: ' + email + '\n\n' + details);
+    window.location.href = 'mailto:' + CONTACT_EMAIL + '?subject=' + subject + '&body=' + body;
+  });
+
+  // ── SCROLL ANIMATIONS — with immediate fallback ─────────────────────────
+  // First mark all fade-up elements as animate-ready (adds the CSS transition)
+  // then use IntersectionObserver to reveal them
+  const fadeEls = document.querySelectorAll('.fade-up');
+  
+  if ('IntersectionObserver' in window) {
+    fadeEls.forEach(el => el.classList.add('animate'));
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -20px 0px' });
+    fadeEls.forEach(el => observer.observe(el));
+  }
+  // If IntersectionObserver not available, elements stay visible (no animate class added)
+
+  // ── CANVAS MESH ANIMATION ───────────────────────────────────────────────
+  const canvas = document.getElementById('bgCanvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, nodes = [];
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function initNodes(count = 55) {
+    nodes = [];
+    for (let i = 0; i < count; i++) {
+      nodes.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - .5) * .35,
+        vy: (Math.random() - .5) * .35,
+        r: Math.random() * 1.8 + .6,
+      });
+    }
+  }
+
+  function drawMesh() {
+    ctx.clearRect(0, 0, W, H);
+    const maxDist = 200;
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const dx = nodes[i].x - nodes[j].x;
+        const dy = nodes[i].y - nodes[j].y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < maxDist) {
+          const alpha = (1 - d / maxDist) * .18;
+          ctx.beginPath();
+          ctx.moveTo(nodes[i].x, nodes[i].y);
+          ctx.lineTo(nodes[j].x, nodes[j].y);
+          ctx.strokeStyle = `rgba(62,207,207,${alpha})`;
+          ctx.lineWidth = .8;
+          ctx.stroke();
+        }
+      }
+    }
+    nodes.forEach(n => {
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(91,163,245,.45)';
+      ctx.fill();
+    });
+  }
+
+  function updateNodes() {
+    nodes.forEach(n => {
+      n.x += n.vx; n.y += n.vy;
+      if (n.x < 0 || n.x > W) n.vx *= -1;
+      if (n.y < 0 || n.y > H) n.vy *= -1;
+    });
+  }
+
+  function loop() {
+    updateNodes();
+    drawMesh();
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener('resize', () => { resize(); initNodes(); });
+  resize();
+  initNodes();
+  loop();
+</script>
+
+</body>
+</html>
